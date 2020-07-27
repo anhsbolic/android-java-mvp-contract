@@ -31,12 +31,9 @@ class TeamDetailPresenter implements TeamDetailContract.Presenter {
         team.setStrLeague("Premier League");
         team.setStrDescriptionEN("Desc");
 
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mView.setTeamDetail(team);
-                mView.hideLoading();
-            }
+        new Handler().postDelayed(() -> {
+            mView.setTeamDetail(team);
+            mView.hideLoading();
         }, 2000);
     }
 

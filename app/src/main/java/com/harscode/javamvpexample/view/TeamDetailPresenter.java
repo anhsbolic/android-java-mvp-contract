@@ -1,14 +1,26 @@
 package com.harscode.javamvpexample.view;
 
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.harscode.javamvpexample.api.ApiServices;
+import com.harscode.javamvpexample.api.SportApiServices;
+import com.harscode.javamvpexample.api.response.TeamDetailResponse;
 import com.harscode.javamvpexample.model.Team;
+
+import java.util.List;
+
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 
 class TeamDetailPresenter implements TeamDetailContract.Presenter {
 
     private TeamDetailContract.View mView;
+    private CompositeDisposable composite = new CompositeDisposable();
+    private SportApiServices sportApiServices = ApiServices.getSportApiServices();
 
     @Override
     public void onAttach(TeamDetailContract.View view) {
@@ -21,20 +33,43 @@ class TeamDetailPresenter implements TeamDetailContract.Presenter {
     }
 
     @Override
+    public void disposeComposite() {
+        composite.dispose();
+    }
+
+    @Override
+    public void clearComposite() {
+        composite.clear();
+    }
+
+    @Override
     public void getTeamDetail(@NonNull String teamId) {
         mView.showLoading();
 
-        final Team team = new Team();
-        team.setStrTeamBadge("https://www.thesportsdb.com/images/media/team/badge/a1af2i1557005128.png");
-        team.setStrTeam("Arsenal");
-        team.setStrStadium("Stadium");
-        team.setStrLeague("Premier League");
-        team.setStrDescriptionEN("Desc");
+        composite.add(
+            sportApiServices.getTeamDetails(teamId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::onGetTeamDetailSuccess, this::onGetTeamDetailError)
+        );
+    }
 
-        new Handler().postDelayed(() -> {
-            mView.setTeamDetail(team);
-            mView.hideLoading();
-        }, 2000);
+    private void onGetTeamDetailSuccess(TeamDetailResponse teamDetailResponse) {
+        if (teamDetailResponse != null) {
+            List<Team> teams = teamDetailResponse.getTeams();
+            if (!teams.isEmpty()) {
+                Team team = teams.get(0);
+                mView.setTeamDetail(team);
+                new Handler().postDelayed(() -> mView.hideLoading(), 500);
+            }
+        }
+    }
+
+    private void onGetTeamDetailError(Throwable throwable) {
+        String msg = throwable.getMessage();
+        if (msg != null) {
+            Log.e(this.getClass().getName(), msg);
+        }
     }
 
 }

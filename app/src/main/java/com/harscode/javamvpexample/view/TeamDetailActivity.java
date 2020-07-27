@@ -28,7 +28,14 @@ public class TeamDetailActivity extends AppCompatActivity implements TeamDetailC
     }
 
     @Override
+    protected void onStop() {
+        presenter.clearComposite();
+        super.onStop();
+    }
+
+    @Override
     protected void onDestroy() {
+        presenter.disposeComposite();
         onDetachView();
         super.onDestroy();
     }

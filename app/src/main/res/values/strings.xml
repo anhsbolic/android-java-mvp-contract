@@ -1,0 +1,5 @@
+<resources>
+	<string name="app_name">JavaMvpExample</string>
+	<string name="content_desc_bagde">bagde</string>
+	<string name="empty_text">-</string>
+</resources>
